@@ -1,0 +1,53 @@
+version: '1.1'
+
+name: merntodoapp
+
+services:
+  mongo:
+    image: mongo:6
+    container_name:  mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db  
+    networks:
+      - merntodoapp
+
+  backend:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - merntodoapp
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - merntodoapp
+    command: npm run dev
+    ports:
+      - "5200:5200"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+
+networks:
+  merntodoapp:
+    driver: bridge
